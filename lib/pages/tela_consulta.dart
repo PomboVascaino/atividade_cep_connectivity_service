@@ -23,6 +23,16 @@ class _TelaConsultaCepState extends State<TelaConsultaCep> {
   String? _fonte;
   List<String> _historico = [];
 
+  final List<Color> _rainbow = const [
+    Colors.red,
+    Colors.orange,
+    Colors.yellow,
+    Colors.green,
+    Colors.blue,
+    Colors.indigo,
+    Colors.purple,
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -32,10 +42,11 @@ class _TelaConsultaCepState extends State<TelaConsultaCep> {
       cache: _cache,
     );
 
+    // Escuta mudanças de status da internet em tempo real
     _connectivityService.statusConexao.listen((online) {
       setState(() {
         _offline = !online;
-        _statusConexao = online ? "Online" : "Offline";
+        _statusConexao = online ? "Online 🌐" : "Offline ❌";
       });
     });
 
@@ -59,7 +70,13 @@ class _TelaConsultaCepState extends State<TelaConsultaCep> {
       _carregarHistorico();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString())),
+        SnackBar(
+          backgroundColor: Colors.pink,
+          content: Text(
+            "😱 Oops: ${e.toString()}",
+            style: const TextStyle(color: Colors.white),
+          ),
+        ),
       );
     }
   }
@@ -67,71 +84,151 @@ class _TelaConsultaCepState extends State<TelaConsultaCep> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Consulta de CEP")),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            if (_offline)
+      appBar: AppBar(
+        title: const Text("🌈 Consulta de CEP 🌈"),
+        centerTitle: true,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(colors: _rainbow),
+          ),
+        ),
+      ),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: _rainbow,
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              // 🔥 Banner de Status
               Container(
-                color: Colors.orange,
-                padding: const EdgeInsets.all(8),
-                child: const Text(
-                  "Você está offline",
-                  style: TextStyle(color: Colors.white),
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                margin: const EdgeInsets.only(bottom: 12),
+                decoration: BoxDecoration(
+                  color: _offline ? Colors.redAccent : Colors.green,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black26,
+                      blurRadius: 6,
+                      offset: const Offset(0, 3),
+                    )
+                  ],
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      _offline ? Icons.wifi_off : Icons.wifi,
+                      color: Colors.white,
+                      size: 28,
+                    ),
+                    const SizedBox(width: 10),
+                    Text(
+                      _statusConexao,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            Row(
-              children: [
-                Icon(_offline ? Icons.wifi_off : Icons.wifi,
-                    color: _offline ? Colors.red : Colors.green),
-                const SizedBox(width: 8),
-                Text("Status: $_statusConexao"),
-              ],
-            ),
-            TextField(
-              controller: _controller,
-              keyboardType: TextInputType.number,
-              maxLength: 8,
-              decoration: const InputDecoration(
-                labelText: "Digite o CEP",
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 8),
-            ElevatedButton(
-              onPressed: () => _buscarCep(_controller.text),
-              child: const Text("Buscar CEP"),
-            ),
-            const SizedBox(height: 16),
-            if (_endereco != null)
-              Card(
-                child: ListTile(
-                  title: Text(
-                      "${_endereco!.logradouro}, ${_endereco!.bairro}, ${_endereco!.localidade} - ${_endereco!.uf}"),
-                  subtitle: Text("CEP: ${_endereco!.cep}"),
-                  trailing: Chip(label: Text(_fonte ?? "")),
+
+              TextField(
+                controller: _controller,
+                keyboardType: TextInputType.number,
+                maxLength: 8,
+                decoration: InputDecoration(
+                  labelText: "Digite o CEP ✨",
+                  labelStyle: const TextStyle(
+                      color: Colors.black, fontWeight: FontWeight.bold),
+                  filled: true,
+                  fillColor: Colors.white.withOpacity(0.8),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
                 ),
               ),
-            const Divider(),
-            Wrap(
-              spacing: 8,
-              children: _historico
-                  .map((cep) => ActionChip(
-                        label: Text(cep),
-                        onPressed: () => _buscarCep(cep),
-                      ))
-                  .toList(),
-            ),
-            const SizedBox(height: 8),
-            ElevatedButton(
-              onPressed: () async {
-                await _cache.limparCache();
-                _carregarHistorico();
-              },
-              child: const Text("Limpar histórico"),
-            ),
-          ],
+              const SizedBox(height: 8),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.pinkAccent,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30)),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                ),
+                onPressed: () => _buscarCep(_controller.text),
+                child: const Text("🔍 Buscar CEP"),
+              ),
+              const SizedBox(height: 16),
+              if (_endereco != null)
+                Card(
+                  color: Colors.white.withOpacity(0.9),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: ListTile(
+                    leading: const Icon(Icons.house, color: Colors.deepPurple),
+                    title: Text(
+                      "${_endereco!.logradouro}, ${_endereco!.bairro}, ${_endereco!.localidade} - ${_endereco!.uf}",
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    subtitle: Text("CEP: ${_endereco!.cep}"),
+                    trailing: Chip(
+                      backgroundColor: Colors.greenAccent,
+                      label: Text(_fonte ?? ""),
+                    ),
+                  ),
+                ),
+              const Divider(thickness: 2),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: _historico
+                    .map(
+                      (cep) => Chip(
+                        backgroundColor:
+                            _rainbow[_historico.indexOf(cep) % _rainbow.length],
+                        label: Text(
+                          cep,
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold),
+                        ),
+                        deleteIcon:
+                            const Icon(Icons.history, color: Colors.white),
+                        onDeleted: () => _buscarCep(cep),
+                      ),
+                    )
+                    .toList(),
+              ),
+              const SizedBox(height: 8),
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30)),
+                ),
+                onPressed: () async {
+                  await _cache.limparCache();
+                  _carregarHistorico();
+                },
+                icon: const Icon(Icons.delete_forever),
+                label: const Text("Limpar histórico 🧹"),
+              ),
+            ],
+          ),
         ),
       ),
     );
